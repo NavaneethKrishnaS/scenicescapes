@@ -23,7 +23,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-primary-foreground bg-primary py-1 px-3 rounded-md hover:bg-primary/90 transition-colors">
           <Plane className="h-7 w-7" />
-          <span>WanderLust</span>
+          <span className='uppercase'>scenic</span>
         </Link>
 
         {/* Desktop Navigation */}
