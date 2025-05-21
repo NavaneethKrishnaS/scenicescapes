@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'WanderLust Concierge - Your Dream Travel Partner',
-  description: 'Expertly crafted travel experiences by WanderLust Concierge.',
+  title: 'scenic escapes india',
+  description: 'Expertly crafted travel experiences by scenic escapes india - Your Dream Travel Partner.',
 };
 
 export default function RootLayout({
