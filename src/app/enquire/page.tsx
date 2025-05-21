@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { PlaneTakeoff, PlaneLanding, User, Mail, Phone, MessageSquare, ShieldCheck, CalendarIcon, UsersRound, Baby } from 'lucide-react';
+import { PlaneTakeoff, PlaneLanding, User, Mail, Phone, MessageSquare, ShieldCheck, CalendarIcon, UsersRound, Baby, BedDouble } from 'lucide-react';
 import { submitEnquiry } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'next/navigation';
@@ -42,10 +42,11 @@ export default function EnquiryPage() {
       phone: "",
       pickupLocation: "",
       finalDestination: destinationFromParams || "",
-      departureDate: undefined,
+      pickupDate: undefined,
       returnDate: undefined,
       adults: 1,
       children: 0,
+      numberOfRooms: 1,
       stops: "",
       message: "",
       recaptchaToken: "mock-recaptcha-token", 
@@ -73,10 +74,11 @@ export default function EnquiryPage() {
           phone: "",
           pickupLocation: "",
           finalDestination: "", 
-          departureDate: undefined,
+          pickupDate: undefined,
           returnDate: undefined,
           adults: 1,
           children: 0,
+          numberOfRooms: 1,
           stops: "",
           message: "",
           recaptchaToken: "mock-recaptcha-token",
@@ -194,10 +196,10 @@ export default function EnquiryPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="departureDate"
+                  name="pickupDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel className="flex items-center gap-2"><CalendarIcon className="h-5 w-5 text-primary" />Departure Date</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><CalendarIcon className="h-5 w-5 text-primary" />Pickup Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -264,7 +266,7 @@ export default function EnquiryPage() {
                             selected={field.value}
                             onSelect={field.onChange}
                             disabled={(date) =>
-                              date < (form.getValues("departureDate") || new Date(new Date().setHours(0,0,0,0)))
+                              date < (form.getValues("pickupDate") || new Date(new Date().setHours(0,0,0,0)))
                             }
                             initialFocus
                           />
@@ -276,13 +278,13 @@ export default function EnquiryPage() {
                 />
               </div>
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                  <FormField
                   control={form.control}
                   name="adults"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2"><UsersRound className="h-5 w-5 text-primary" />Number of Adults</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><UsersRound className="h-5 w-5 text-primary" />Adults</FormLabel>
                       <FormControl>
                         <Input type="number" min="1" placeholder="1" {...field} onChange={e => field.onChange(parseInt(e.target.value,10) || 0 )}/>
                       </FormControl>
@@ -295,9 +297,22 @@ export default function EnquiryPage() {
                   name="children"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2"><Baby className="h-5 w-5 text-primary" />Number of Children</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><Baby className="h-5 w-5 text-primary" />Children</FormLabel>
                       <FormControl>
                         <Input type="number" min="0" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value,10) || 0 )}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="numberOfRooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><BedDouble className="h-5 w-5 text-primary" />Rooms</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" placeholder="1" {...field} onChange={e => field.onChange(parseInt(e.target.value,10) || 0 )}/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -372,3 +387,4 @@ export default function EnquiryPage() {
     </div>
   );
 }
+

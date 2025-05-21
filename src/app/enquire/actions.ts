@@ -62,11 +62,12 @@ export async function submitEnquiry(data: EnquiryFormValues): Promise<{ success:
     <hr />
     <p><strong>Pickup Location:</strong> ${formData.pickupLocation}</p>
     <p><strong>Final Destination:</strong> ${formData.finalDestination}</p>
-    <p><strong>Departure Date:</strong> ${formData.departureDate ? format(formData.departureDate, "PPP") : 'Not specified'}</p>
+    <p><strong>Pickup Date:</strong> ${formData.pickupDate ? format(formData.pickupDate, "PPP") : 'Not specified'}</p>
     <p><strong>Return Date:</strong> ${formData.returnDate ? format(formData.returnDate, "PPP") : 'Not specified'}</p>
     <hr />
     <p><strong>Number of Adults:</strong> ${formData.adults}</p>
     <p><strong>Number of Children:</strong> ${formData.children !== undefined && formData.children !== null ? formData.children : '0'}</p>
+    <p><strong>Preferred Number of Rooms:</strong> ${formData.numberOfRooms !== undefined && formData.numberOfRooms !== null ? formData.numberOfRooms : 'Not specified'}</p>
     <p><strong>Optional Stops:</strong> ${formData.stops || 'None'}</p>
     <hr />
     <p><strong>Message:</strong></p>
@@ -85,3 +86,4 @@ export async function submitEnquiry(data: EnquiryFormValues): Promise<{ success:
     return { success: false, error: "An unexpected error occurred while submitting your enquiry." };
   }
 }
+
