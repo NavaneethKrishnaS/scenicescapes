@@ -18,41 +18,44 @@ export default function DestinationsPage() {
 
       <section>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {destinations.map((dest) => (
-            <Card key={dest.id} id={dest.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
-              <div className="relative h-64 w-full">
-                <Image
-                  src={dest.image}
-                  alt={dest.name}
-                  layout="fill"
-                  objectFit="cover"
-                  data-ai-hint={dest.dataAiHint}
-                />
-                <div className="absolute top-4 right-4 bg-background/80 p-2 rounded-full shadow-md">
-                  {dest.icon}
+          {destinations.map((dest) => {
+            const IconComponent = dest.icon;
+            return (
+              <Card key={dest.id} id={dest.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
+                <div className="relative h-64 w-full">
+                  <Image
+                    src={dest.image}
+                    alt={dest.name}
+                    layout="fill"
+                    objectFit="cover"
+                    data-ai-hint={dest.dataAiHint}
+                  />
+                  <div className="absolute top-4 right-4 bg-background/80 p-2 rounded-full shadow-md">
+                    <IconComponent className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-2xl">{dest.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <p className="text-muted-foreground mb-3">{dest.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {dest.tags.map(tag => (
-                    <span key={tag} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full">{tag}</span>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter>
-                {/* Updated Link to point to the dynamic destination page */}
-                <Link href={`/destinations/${dest.id}`} className="w-full">
-                  <Button variant="default" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                    View Details <MapPin className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
+                <CardHeader>
+                  <CardTitle className="text-2xl">{dest.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <p className="text-muted-foreground mb-3">{dest.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {dest.tags.map(tag => (
+                      <span key={tag} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full">{tag}</span>
+                    ))}
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  {/* Updated Link to point to the dynamic destination page */}
+                  <Link href={`/destinations/${dest.id}`} className="w-full">
+                    <Button variant="default" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                      View Details <MapPin className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       </section>
     </div>
