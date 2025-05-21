@@ -28,11 +28,16 @@ import { useEffect } from "react";
 import type { EnquiryFormValues } from "@/lib/types";
 import { enquiryFormSchema } from "@/lib/types";
 
+interface EnquiryPageProps {
+  defaultDestinationName?: string; // New prop
+}
 
-export default function EnquiryPage() {
+export default function EnquiryPage({ defaultDestinationName }: EnquiryPageProps) {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const destinationFromParams = searchParams.get('to');
+  
+  // Prioritize prop, then searchParam for initial default value
+  const initialDestination = defaultDestinationName || searchParams.get('to') || "";
 
   const form = useForm<EnquiryFormValues>({
     resolver: zodResolver(enquiryFormSchema),
@@ -41,7 +46,7 @@ export default function EnquiryPage() {
       email: "",
       phone: "",
       pickupLocation: "",
-      finalDestination: destinationFromParams || "",
+      finalDestination: initialDestination,
       pickupDate: undefined,
       returnDate: undefined,
       adults: 1,
@@ -54,10 +59,27 @@ export default function EnquiryPage() {
   });
 
   useEffect(() => {
-    if (destinationFromParams) {
-      form.setValue('finalDestination', destinationFromParams);
+    // Update finalDestination if the prop or searchParam changes and differs from current form value
+    const currentDestinationQuery = searchParams.get('to');
+    const effectiveDestination = defaultDestinationName || currentDestinationQuery;
+
+    if (effectiveDestination && form.getValues('finalDestination') !== effectiveDestination) {
+      form.setValue('finalDestination', effectiveDestination, { shouldValidate: true });
     }
-  }, [destinationFromParams, form]);
+    // If no prop and no query param, but form has a value (e.g. user typed), don't clear it.
+    // If form is empty and params become empty, ensure it's reflected.
+    else if (!effectiveDestination && form.getValues('finalDestination') !== "") {
+       // This case might be too aggressive if user clears param and wants to type manually.
+       // For now, let's assume if params are gone, field should reflect that unless user explicitly typed.
+       // If the component is part of a larger page, defaultDestinationName might become undefined,
+       // in which case we don't want to clear user input if they started typing.
+       // So, only update if `initialDestination` was based on a param/prop that is now gone.
+       if (initialDestination && initialDestination !== "" && form.getValues('finalDestination') === initialDestination) {
+         form.setValue('finalDestination', "", { shouldValidate: true });
+       }
+    }
+
+  }, [defaultDestinationName, searchParams, form, initialDestination]);
 
   async function onSubmit(data: EnquiryFormValues) {
     try {
@@ -73,7 +95,7 @@ export default function EnquiryPage() {
           email: "",
           phone: "",
           pickupLocation: "",
-          finalDestination: "", 
+          finalDestination: defaultDestinationName || "", // Reset to prop or empty
           pickupDate: undefined,
           returnDate: undefined,
           adults: 1,
@@ -90,7 +112,9 @@ export default function EnquiryPage() {
         } else if (result.error && 'flatten' in result.error) {
           // ZodError
           const fieldErrors = result.error.flatten().fieldErrors;
-          const firstError = Object.values(fieldErrors).flat()[0];
+          const firstErrorKey = Object.keys(fieldErrors)[0] as keyof EnquiryFormValues;
+          const firstError = fieldErrors[firstErrorKey]?.[0];
+          
           if (firstError) {
             errorMessage = firstError;
           } else if (result.error.flatten().formErrors.length > 0){
@@ -113,7 +137,11 @@ export default function EnquiryPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    // No change to JSX needed here for passing the prop, only logic above.
+    // The Card and Form structure remains the same.
+    // Max-width and other styling are applied by the parent page if this is embedded.
+    // If this page is accessed directly, its own layout applies.
+    <div className={defaultDestinationName ? "" : "max-w-2xl mx-auto py-8"}> {/* Adjust layout if embedded */}
       <Card className="shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-foreground">Plan Your Adventure</CardTitle>
@@ -265,9 +293,11 @@ export default function EnquiryPage() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < (form.getValues("pickupDate") || new Date(new Date().setHours(0,0,0,0)))
-                            }
+                            disabled={(date) => {
+                              const pickup = form.getValues("pickupDate");
+                              const minDate = pickup || new Date(new Date().setHours(0,0,0,0));
+                              return date < minDate;
+                            }}
                             initialFocus
                           />
                         </PopoverContent>
@@ -387,4 +417,3 @@ export default function EnquiryPage() {
     </div>
   );
 }
-
