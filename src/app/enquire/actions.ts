@@ -1,9 +1,10 @@
+
 "use server";
 
 import { z } from "zod";
 import type { EnquiryFormValues } from "@/lib/types";
 import { enquiryFormSchema } from "@/lib/types";
-
+import { format } from "date-fns";
 
 // In a real application, these would be in .env
 const EMPLOYEE_EMAIL = process.env.EMPLOYEE_EMAIL_ADDRESS || "employee@example.com";
@@ -31,16 +32,6 @@ async function verifyRecaptcha(token: string | undefined): Promise<boolean> {
 
 async function sendEmail(to: string, subject: string, htmlContent: string): Promise<boolean> {
   // Placeholder for email sending logic (e.g., using Resend or Nodemailer)
-  // Example with Resend (conceptual):
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // await resend.emails.send({
-  //   from: 'WanderLust Concierge <noreply@yourdomain.com>',
-  //   to: to,
-  //   subject: subject,
-  //   html: htmlContent,
-  // });
-  // return true;
-
   console.log(`Email supposedly sent to: ${to}`);
   console.log(`Subject: ${subject}`);
   console.log(`HTML Content: ${htmlContent}`);
@@ -48,10 +39,11 @@ async function sendEmail(to: string, subject: string, htmlContent: string): Prom
   return true;
 }
 
-export async function submitEnquiry(data: EnquiryFormValues): Promise<{ success: boolean; error?: string }> {
+export async function submitEnquiry(data: EnquiryFormValues): Promise<{ success: boolean; error?: string | Zod.ZodError<EnquiryFormValues>; }> {
   const validationResult = enquiryFormSchema.safeParse(data);
   if (!validationResult.success) {
-    return { success: false, error: "Invalid form data." };
+    console.error("Form validation failed:", validationResult.error.flatten().fieldErrors);
+    return { success: false, error: validationResult.error };
   }
 
   const { recaptchaToken, ...formData } = validationResult.data;
@@ -70,6 +62,11 @@ export async function submitEnquiry(data: EnquiryFormValues): Promise<{ success:
     <hr />
     <p><strong>Pickup Location:</strong> ${formData.pickupLocation}</p>
     <p><strong>Final Destination:</strong> ${formData.finalDestination}</p>
+    <p><strong>Departure Date:</strong> ${formData.departureDate ? format(formData.departureDate, "PPP") : 'Not specified'}</p>
+    <p><strong>Return Date:</strong> ${formData.returnDate ? format(formData.returnDate, "PPP") : 'Not specified'}</p>
+    <hr />
+    <p><strong>Number of Adults:</strong> ${formData.adults}</p>
+    <p><strong>Number of Children:</strong> ${formData.children !== undefined && formData.children !== null ? formData.children : '0'}</p>
     <p><strong>Optional Stops:</strong> ${formData.stops || 'None'}</p>
     <hr />
     <p><strong>Message:</strong></p>

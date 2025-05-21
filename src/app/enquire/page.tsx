@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlaneTakeoff, PlaneLanding, User, Mail, Phone, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { PlaneTakeoff, PlaneLanding, User, Mail, Phone, MessageSquare, ShieldCheck, CalendarIcon, UsersRound, Baby } from 'lucide-react';
 import { submitEnquiry } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'next/navigation';
@@ -37,9 +42,13 @@ export default function EnquiryPage() {
       phone: "",
       pickupLocation: "",
       finalDestination: destinationFromParams || "",
+      departureDate: undefined,
+      returnDate: undefined,
+      adults: 1,
+      children: 0,
       stops: "",
       message: "",
-      recaptchaToken: "mock-recaptcha-token", // Replace with actual reCAPTCHA integration
+      recaptchaToken: "mock-recaptcha-token", 
     },
   });
 
@@ -51,10 +60,6 @@ export default function EnquiryPage() {
 
   async function onSubmit(data: EnquiryFormValues) {
     try {
-      // In a real app, you would get the reCAPTCHA token here
-      // For now, we use a mock token
-      // data.recaptchaToken = await executeRecaptcha('enquiry_form');
-
       const result = await submitEnquiry(data);
 
       if (result.success) {
@@ -67,15 +72,32 @@ export default function EnquiryPage() {
           email: "",
           phone: "",
           pickupLocation: "",
-          finalDestination: "", // Reset destination as well or keep from params if desired
+          finalDestination: "", 
+          departureDate: undefined,
+          returnDate: undefined,
+          adults: 1,
+          children: 0,
           stops: "",
           message: "",
           recaptchaToken: "mock-recaptcha-token",
         });
       } else {
+        let errorMessage = "An unexpected error occurred. Please try again.";
+        if (typeof result.error === 'string') {
+          errorMessage = result.error;
+        } else if (result.error && 'flatten' in result.error) {
+          // ZodError
+          const fieldErrors = result.error.flatten().fieldErrors;
+          const firstError = Object.values(fieldErrors).flat()[0];
+          if (firstError) {
+            errorMessage = firstError;
+          } else if (result.error.flatten().formErrors.length > 0){
+            errorMessage = result.error.flatten().formErrors[0];
+          }
+        }
         toast({
           title: "Submission Failed",
-          description: result.error || "An unexpected error occurred. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -139,6 +161,7 @@ export default function EnquiryPage() {
                   </FormItem>
                 )}
               />
+              
               <div className="grid md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -167,6 +190,121 @@ export default function EnquiryPage() {
                   )}
                 />
               </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="departureDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="flex items-center gap-2"><CalendarIcon className="h-5 w-5 text-primary" />Departure Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date(new Date().setHours(0,0,0,0)) // Disable past dates
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="returnDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="flex items-center gap-2"><CalendarIcon className="h-5 w-5 text-primary" />Return Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < (form.getValues("departureDate") || new Date(new Date().setHours(0,0,0,0)))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                 <FormField
+                  control={form.control}
+                  name="adults"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><UsersRound className="h-5 w-5 text-primary" />Number of Adults</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" placeholder="1" {...field} onChange={e => field.onChange(parseInt(e.target.value,10) || 0 )}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="children"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><Baby className="h-5 w-5 text-primary" />Number of Children</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" placeholder="0" {...field} onChange={e => field.onChange(parseInt(e.target.value,10) || 0 )}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="stops"
@@ -191,7 +329,7 @@ export default function EnquiryPage() {
                     <FormLabel className="flex items-center gap-2"><MessageSquare className="h-5 w-5 text-primary" />Your Message</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Tell us about your dream trip, preferences, number of travelers, approximate dates, budget, etc."
+                        placeholder="Tell us about your dream trip, preferences, approximate dates, budget, etc."
                         className="min-h-[120px]"
                         {...field}
                       />
@@ -201,7 +339,6 @@ export default function EnquiryPage() {
                 )}
               />
               
-              {/* Placeholder for reCAPTCHA v2 */}
               <div className="space-y-2">
                 <FormLabel className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />Security Check</FormLabel>
                 <div className="bg-muted p-4 rounded-md border border-input">
@@ -212,7 +349,6 @@ export default function EnquiryPage() {
                     This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.
                   </p>
                 </div>
-                 {/* Hidden field for reCAPTCHA token, managed by actual reCAPTCHA library */}
                  <FormField
                     control={form.control}
                     name="recaptchaToken"
