@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,19 +20,9 @@ import { submitEnquiry } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from "react";
+import type { EnquiryFormValues } from "@/lib/types";
+import { enquiryFormSchema } from "@/lib/types";
 
-const enquiryFormSchema = z.object({
-  from: z.string().min(2, { message: "Departure location must be at least 2 characters." }),
-  to: z.string().min(2, { message: "Destination must be at least 2 characters." }),
-  stops: z.string().optional(),
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }).optional(),
-  message: z.string().min(10, { message: "Message must be at least 10 characters." }).max(500, { message: "Message must not exceed 500 characters." }),
-  recaptchaToken: z.string().optional(), // Placeholder for reCAPTCHA token
-});
-
-type EnquiryFormValues = z.infer<typeof enquiryFormSchema>;
 
 export default function EnquiryPage() {
   const { toast } = useToast();
@@ -43,12 +32,12 @@ export default function EnquiryPage() {
   const form = useForm<EnquiryFormValues>({
     resolver: zodResolver(enquiryFormSchema),
     defaultValues: {
-      from: "",
-      to: destinationFromParams || "",
-      stops: "",
       name: "",
       email: "",
       phone: "",
+      pickupLocation: "",
+      finalDestination: destinationFromParams || "",
+      stops: "",
       message: "",
       recaptchaToken: "mock-recaptcha-token", // Replace with actual reCAPTCHA integration
     },
@@ -56,7 +45,7 @@ export default function EnquiryPage() {
 
   useEffect(() => {
     if (destinationFromParams) {
-      form.setValue('to', destinationFromParams);
+      form.setValue('finalDestination', destinationFromParams);
     }
   }, [destinationFromParams, form]);
 
@@ -73,7 +62,16 @@ export default function EnquiryPage() {
           title: "Enquiry Submitted!",
           description: "Thank you for your enquiry. We will get back to you soon.",
         });
-        form.reset();
+        form.reset({
+          name: "",
+          email: "",
+          phone: "",
+          pickupLocation: "",
+          finalDestination: "", // Reset destination as well or keep from params if desired
+          stops: "",
+          message: "",
+          recaptchaToken: "mock-recaptcha-token",
+        });
       } else {
         toast({
           title: "Submission Failed",
@@ -102,50 +100,6 @@ export default function EnquiryPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="from"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2"><PlaneTakeoff className="h-5 w-5 text-primary" />Departure Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., New York" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="to"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2"><PlaneLanding className="h-5 w-5 text-primary" />Destination</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Paris" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="stops"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2"><PlaneLanding className="h-5 w-5 text-primary opacity-70" />Optional Stops</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., London, Amsterdam (comma-separated)" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      If you'd like to visit multiple cities, list them here.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="name"
@@ -181,6 +135,50 @@ export default function EnquiryPage() {
                     <FormControl>
                       <Input type="tel" placeholder="+1 234 567 8900" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="pickupLocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><PlaneTakeoff className="h-5 w-5 text-primary" />Pickup Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., New York" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="finalDestination"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><PlaneLanding className="h-5 w-5 text-primary" />Final Destination</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Paris" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="stops"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><PlaneLanding className="h-5 w-5 text-primary opacity-70" />Optional Stops</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., London, Amsterdam (comma-separated)" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      If you'd like to visit multiple cities, list them here.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

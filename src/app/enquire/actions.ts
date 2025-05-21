@@ -1,19 +1,9 @@
 "use server";
 
 import { z } from "zod";
+import type { EnquiryFormValues } from "@/lib/types";
+import { enquiryFormSchema } from "@/lib/types";
 
-const enquiryFormSchema = z.object({
-  from: z.string().min(2),
-  to: z.string().min(2),
-  stops: z.string().optional(),
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  message: z.string().min(10).max(500),
-  recaptchaToken: z.string().optional(), // Placeholder for reCAPTCHA token
-});
-
-type EnquiryFormValues = z.infer<typeof enquiryFormSchema>;
 
 // In a real application, these would be in .env
 const EMPLOYEE_EMAIL = process.env.EMPLOYEE_EMAIL_ADDRESS || "employee@example.com";
@@ -78,8 +68,8 @@ export async function submitEnquiry(data: EnquiryFormValues): Promise<{ success:
     <p><strong>Email:</strong> ${formData.email}</p>
     <p><strong>Phone:</strong> ${formData.phone || 'Not provided'}</p>
     <hr />
-    <p><strong>Departure Location:</strong> ${formData.from}</p>
-    <p><strong>Destination:</strong> ${formData.to}</p>
+    <p><strong>Pickup Location:</strong> ${formData.pickupLocation}</p>
+    <p><strong>Final Destination:</strong> ${formData.finalDestination}</p>
     <p><strong>Optional Stops:</strong> ${formData.stops || 'None'}</p>
     <hr />
     <p><strong>Message:</strong></p>
